@@ -3,6 +3,10 @@ import typing
 import pytest
 from testcontainers.core.container import DockerContainer
 from tests.e2e.flagd_container import FlagdContainer
+from tests.e2e.step.config import *  # noqa: F403
+from tests.e2e.step.context import *  # noqa: F403
+from tests.e2e.step.flag import *  # noqa: F403
+from tests.e2e.step.handler import *  # noqa: F403
 from tests.e2e.steps import *  # noqa: F403
 
 JsonPrimitive = typing.Union[str, bool, float, int]
