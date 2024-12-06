@@ -54,7 +54,7 @@ class GrpcResolver:
         self.emit_provider_configuration_changed = emit_provider_configuration_changed
         self.cache: typing.Optional[BaseCacheImpl] = (
             LRUCache(maxsize=self.config.max_cache_size)
-            if self.config.cache_type == CacheType.LRU
+            if self.config.cache == CacheType.LRU
             else None
         )
         self.stub, self.channel = self._create_stub()
@@ -62,7 +62,7 @@ class GrpcResolver:
         self.retry_backoff_max_seconds = config.retry_backoff_ms * 0.001
         self.retry_grace_attempts = config.retry_grace_attempts
         self.streamline_deadline_seconds = config.stream_deadline_ms * 0.001
-        self.deadline = config.deadline * 0.001
+        self.deadline = config.deadline_ms * 0.001
         self.connected = False
 
     def _create_stub(
@@ -72,7 +72,7 @@ class GrpcResolver:
         channel_factory = grpc.secure_channel if config.tls else grpc.insecure_channel
         channel = channel_factory(
             f"{config.host}:{config.port}",
-            options=(("grpc.keepalive_time_ms", config.keep_alive),),
+            options=(("grpc.keepalive_time_ms", config.keep_alive_time),),
         )
         stub = evaluation_pb2_grpc.ServiceStub(channel)
 

@@ -76,16 +76,16 @@ class Config:
         host: typing.Optional[str] = None,
         port: typing.Optional[int] = None,
         tls: typing.Optional[bool] = None,
-        resolver_type: typing.Optional[ResolverType] = None,
+        resolver: typing.Optional[ResolverType] = None,
         offline_flag_source_path: typing.Optional[str] = None,
-        offline_poll_ms: typing.Optional[int] = None,
+        offline_poll_interval_ms: typing.Optional[int] = None,
         retry_backoff_ms: typing.Optional[int] = None,
         retry_backoff_max_ms: typing.Optional[int] = None,
         retry_grace_attempts: typing.Optional[int] = None,
-        deadline: typing.Optional[int] = None,
+        deadline_ms: typing.Optional[int] = None,
         stream_deadline_ms: typing.Optional[int] = None,
-        keep_alive: typing.Optional[int] = None,
-        cache_type: typing.Optional[CacheType] = None,
+        keep_alive_time: typing.Optional[int] = None,
+        cache: typing.Optional[CacheType] = None,
         max_cache_size: typing.Optional[int] = None,
     ):
         self.host = env_or_default(ENV_VAR_HOST, DEFAULT_HOST) if host is None else host
@@ -125,17 +125,17 @@ class Config:
             else retry_grace_attempts
         )
 
-        self.resolver_type = (
+        self.resolver = (
             env_or_default(
                 ENV_VAR_RESOLVER_TYPE, DEFAULT_RESOLVER_TYPE, cast=convert_resolver_type
             )
-            if resolver_type is None
-            else resolver_type
+            if resolver is None
+            else resolver
         )
 
         default_port = (
             DEFAULT_PORT_RPC
-            if self.resolver_type is ResolverType.RPC
+            if self.resolver is ResolverType.RPC
             else DEFAULT_PORT_IN_PROCESS
         )
 
@@ -153,20 +153,20 @@ class Config:
             else offline_flag_source_path
         )
 
-        self.offline_poll_ms: int = (
+        self.offline_poll_interval_ms: int = (
             int(
                 env_or_default(
                     ENV_VAR_OFFLINE_POLL_MS, DEFAULT_OFFLINE_POLL_MS, cast=int
                 )
             )
-            if offline_poll_ms is None
-            else offline_poll_ms
+            if offline_poll_interval_ms is None
+            else offline_poll_interval_ms
         )
 
-        self.deadline: int = (
+        self.deadline_ms: int = (
             int(env_or_default(ENV_VAR_DEADLINE_MS, DEFAULT_DEADLINE, cast=int))
-            if deadline is None
-            else deadline
+            if deadline_ms is None
+            else deadline_ms
         )
 
         self.stream_deadline_ms: int = (
@@ -179,18 +179,18 @@ class Config:
             else stream_deadline_ms
         )
 
-        self.keep_alive: int = (
+        self.keep_alive_time: int = (
             int(
                 env_or_default(ENV_VAR_KEEP_ALIVE_TIME_MS, DEFAULT_KEEP_ALIVE, cast=int)
             )
-            if keep_alive is None
-            else keep_alive
+            if keep_alive_time is None
+            else keep_alive_time
         )
 
-        self.cache_type = (
+        self.cache = (
             CacheType(env_or_default(ENV_VAR_CACHE_TYPE, DEFAULT_CACHE))
-            if cache_type is None
-            else cache_type
+            if cache is None
+            else cache
         )
 
         self.max_cache_size: int = (

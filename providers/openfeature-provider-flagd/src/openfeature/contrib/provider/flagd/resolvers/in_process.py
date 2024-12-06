@@ -23,7 +23,7 @@ class InProcessResolver:
         self.flag_store = FileWatcherFlagStore(
             self.config.offline_flag_source_path,
             self.provider,
-            self.config.retry_backoff_ms * 0.001,
+            self.config.offline_poll_interval_ms * 0.001,
         )
 
     def initialize(self, evaluation_context: EvaluationContext) -> None:
