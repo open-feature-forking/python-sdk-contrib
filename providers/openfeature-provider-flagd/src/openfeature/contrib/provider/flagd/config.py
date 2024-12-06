@@ -1,3 +1,4 @@
+import dataclasses
 import os
 import typing
 from enum import Enum
@@ -19,10 +20,13 @@ DEFAULT_DEADLINE = 500
 DEFAULT_HOST = "localhost"
 DEFAULT_KEEP_ALIVE = 0
 DEFAULT_OFFLINE_SOURCE_PATH: typing.Optional[str] = None
+DEFAULT_OFFLINE_POLL_MS = 5000
 DEFAULT_PORT_IN_PROCESS = 8015
 DEFAULT_PORT_RPC = 8013
 DEFAULT_RESOLVER_TYPE = ResolverType.RPC
 DEFAULT_RETRY_BACKOFF = 1000
+DEFAULT_RETRY_BACKOFF_MAX = 120000
+DEFAULT_RETRY_GRACE_ATTEMPTS = 5
 DEFAULT_STREAM_DEADLINE = 600000
 DEFAULT_TLS = False
 
@@ -32,9 +36,12 @@ ENV_VAR_DEADLINE_MS = "FLAGD_DEADLINE_MS"
 ENV_VAR_HOST = "FLAGD_HOST"
 ENV_VAR_KEEP_ALIVE_TIME_MS = "FLAGD_KEEP_ALIVE_TIME_MS"
 ENV_VAR_OFFLINE_FLAG_SOURCE_PATH = "FLAGD_OFFLINE_FLAG_SOURCE_PATH"
+ENV_VAR_OFFLINE_POLL_MS = "FLAGD_OFFLINE_POLL_MS"
 ENV_VAR_PORT = "FLAGD_PORT"
 ENV_VAR_RESOLVER_TYPE = "FLAGD_RESOLVER"
 ENV_VAR_RETRY_BACKOFF_MS = "FLAGD_RETRY_BACKOFF_MS"
+ENV_VAR_RETRY_BACKOFF_MAX_MS = "FLAGD_RETRY_BACKOFF_MAX_MS"
+ENV_VAR_RETRY_GRACE_ATTEMPTS = "FLAGD_RETRY_GRACE_ATTEMPTS"
 ENV_VAR_STREAM_DEADLINE_MS = "FLAGD_STREAM_DEADLINE_MS"
 ENV_VAR_TLS = "FLAGD_TLS"
 
@@ -62,6 +69,7 @@ def env_or_default(
     return val if cast is None else cast(val)
 
 
+@dataclasses.dataclass
 class Config:
     def __init__(  # noqa: PLR0913
         self,
@@ -70,7 +78,10 @@ class Config:
         tls: typing.Optional[bool] = None,
         resolver_type: typing.Optional[ResolverType] = None,
         offline_flag_source_path: typing.Optional[str] = None,
+        offline_poll_ms: typing.Optional[int] = None,
         retry_backoff_ms: typing.Optional[int] = None,
+        retry_backoff_max_ms: typing.Optional[int] = None,
+        retry_grace_attempts: typing.Optional[int] = None,
         deadline: typing.Optional[int] = None,
         stream_deadline_ms: typing.Optional[int] = None,
         keep_alive: typing.Optional[int] = None,
@@ -93,6 +104,25 @@ class Config:
             )
             if retry_backoff_ms is None
             else retry_backoff_ms
+        )
+        self.retry_backoff_max_ms: int = (
+            int(
+                env_or_default(
+                    ENV_VAR_RETRY_BACKOFF_MAX_MS, DEFAULT_RETRY_BACKOFF_MAX, cast=int
+                )
+            )
+            if retry_backoff_max_ms is None
+            else retry_backoff_max_ms
+        )
+
+        self.retry_grace_attempts: int = (
+            int(
+                env_or_default(
+                    ENV_VAR_RETRY_GRACE_ATTEMPTS, DEFAULT_RETRY_GRACE_ATTEMPTS, cast=int
+                )
+            )
+            if retry_grace_attempts is None
+            else retry_grace_attempts
         )
 
         self.resolver_type = (
@@ -121,6 +151,16 @@ class Config:
             )
             if offline_flag_source_path is None
             else offline_flag_source_path
+        )
+
+        self.offline_poll_ms: int = (
+            int(
+                env_or_default(
+                    ENV_VAR_OFFLINE_POLL_MS, DEFAULT_OFFLINE_POLL_MS, cast=int
+                )
+            )
+            if offline_poll_ms is None
+            else offline_poll_ms
         )
 
         self.deadline: int = (
