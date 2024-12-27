@@ -1,4 +1,6 @@
 import logging
+import os
+import tempfile
 import threading
 import typing
 from enum import Enum
@@ -34,7 +36,9 @@ def setup_provider_old(
 
 
 def get_default_options_for_provider(
-    provider_type: str, resolver_type: ResolverType
+    provider_type: str,
+    resolver_type: ResolverType,
+    socket_path: str,
 ) -> typing.Tuple[dict, bool]:
     t = TestProviderType(provider_type)
     options: dict = {
@@ -43,6 +47,7 @@ def get_default_options_for_provider(
         "stream_deadline_ms": 0,
         "retry_backoff_ms": 1000,
         "retry_grace_period": 2,
+        "tls": False,
     }
     if t == TestProviderType.UNAVAILABLE:
         return {}, False
@@ -54,7 +59,8 @@ def get_default_options_for_provider(
         options["cert_path"] = str(path.absolute())
         options["tls"] = True
     elif t == TestProviderType.SOCKET:
-        return options, True
+        options["socket_path"] = socket_path
+        options["deadline_ms"] = 2000
 
     return options, True
 
@@ -67,9 +73,10 @@ def setup_provider(
     resolver_type: ResolverType,
     provider_type: str,
     option_values: dict,
+    socket_path: str,
 ) -> OpenFeatureClient:
     default_options, ready = get_default_options_for_provider(
-        provider_type, resolver_type
+        provider_type, resolver_type, socket_path
     )
 
     if ready:
@@ -124,10 +131,35 @@ def flagd_restart(seconds, containers: dict, provider_type: str):
 
 
 @pytest.fixture(autouse=True, scope="module")
-def containers(request):
+def socket_path(request):
+    base_dir = Path(__file__).parents[5].joinpath("tmp")
+
+    if not base_dir.exists():
+        base_dir.mkdir(0o777, True)
+
+    with tempfile.TemporaryDirectory(
+        ignore_cleanup_errors=True, dir=base_dir
+    ) as temp_dir:
+        # Generate the full file path within the temporary directory
+        temp_file_path = os.path.join(temp_dir, "socket.sock")
+        os.chmod(temp_dir, 0o777)  # noqa: S103 - test code
+
+        yield temp_file_path
+        return temp_file_path
+
+
+@pytest.fixture(autouse=True, scope="module")
+def containers(request, socket_path):
+    socket_container = FlagdContainer("socket")
+    socket_container = socket_container.with_volume_mapping(
+        str(Path(socket_path).parents[0].absolute()),
+        "/tmp",  # noqa: S108
+        "rw",
+    )
     containers = {
         "default": FlagdContainer(),
         "ssl": FlagdContainer("ssl"),
+        "socket": socket_container,
     }
 
     [containers[c].start() for c in containers]

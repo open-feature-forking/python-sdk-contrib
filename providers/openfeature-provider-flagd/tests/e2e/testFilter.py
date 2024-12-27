@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 
 class TestFilter:
@@ -82,6 +83,8 @@ class TestFilter:
         """
         include_tags = set()
         exclude_tags = set()
+        if "linux" not in sys.platform:
+            exclude_tags.add("os.linux")
 
         for tag in tags_option:
             if tag.startswith("~"):

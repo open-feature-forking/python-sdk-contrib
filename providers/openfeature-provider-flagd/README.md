@@ -53,6 +53,7 @@ The default options can be defined in the FlagdProvider constructor.
 | port                     | FLAGD_PORT                     | int                        | 8013 (rpc), 8015 (in-process) | rpc & in-process    |
 | tls                      | FLAGD_TLS                      | bool                       | false                         | rpc & in-process    |
 | cert_path                | FLAGD_SERVER_CERT_PATH         | String                     | null                          | rpc & in-process    |
+| socket_path              | FLAGD_SOCKET_PATH              |                            | String    | null                | rpc & in-process |
 | deadline                 | FLAGD_DEADLINE_MS              | int                        | 500                           | rpc & in-process    |
 | stream_deadline_ms       | FLAGD_STREAM_DEADLINE_MS       | int                        | 600000                        | rpc & in-process    |
 | keep_alive_time          | FLAGD_KEEP_ALIVE_TIME_MS       | int                        | 0                             | rpc & in-process    |
@@ -64,7 +65,6 @@ The default options can be defined in the FlagdProvider constructor.
 
 <!-- not implemented
 | target_uri               | FLAGD_TARGET_URI               | alternative to host/port, supporting custom name resolution | string    | null                | rpc & in-process |
-| socket_path              | FLAGD_SOCKET_PATH              | alternative to host port, unix socket                       | String    | null                | rpc & in-process |
 | context_enricher         | -                              | sync-metadata to evaluation context mapping function        | function  | identity function   | in-process       |
 | offline_pollIntervalMs   | FLAGD_OFFLINE_POLL_MS          | poll interval for reading offlineFlagSourcePath             | int       | 5000                | in-process       |
  -->
@@ -72,12 +72,10 @@ The default options can be defined in the FlagdProvider constructor.
 > [!NOTE]
 > Some configurations are only applicable for RPC resolver.
 
-<!--
 ### Unix socket support
 Unix socket communication with flagd is facilitated by usaging of the linux-native `epoll` library on `linux-x86_64`
 only (ARM support is pending the release of `netty-transport-native-epoll` v5).
 Unix sockets are not supported on other platforms or architectures.
--->
 
 ### Reconnection
 

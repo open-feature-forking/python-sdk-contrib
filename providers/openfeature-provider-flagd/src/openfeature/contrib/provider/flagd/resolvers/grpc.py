@@ -74,6 +74,9 @@ class GrpcResolver:
 
     def _generate_channel(self, config: Config) -> grpc.Channel:
         target = f"{config.host}:{config.port}"
+        if config.socket_path is not None:
+            target = f"unix:////{config.socket_path}"
+
         # Create the channel with the service config
         options = [
             ("grpc.keepalive_time_ms", config.keep_alive_time),
@@ -185,7 +188,9 @@ class GrpcResolver:
         while self.active:
             try:
                 logger.debug("Setting up gRPC sync flags connection")
-                for message in self.stub.EventStream(request, **call_args):
+                for message in self.stub.EventStream(
+                    request, wait_for_ready=True, **call_args
+                ):
                     if message.type == "provider_ready":
                         self.connected = True
                         self.emit_provider_ready(
@@ -193,7 +198,7 @@ class GrpcResolver:
                                 message="gRPC sync connection established"
                             )
                         )
-                    elif message.type == "configuration_change":
+                    if message.type == "configuration_change":
                         data = MessageToDict(message)["data"]
                         self.handle_changed_flags(data)
 
