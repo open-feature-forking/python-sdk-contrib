@@ -21,6 +21,7 @@ class InProcessResolver:
         config: Config,
         emit_provider_ready: typing.Callable[[ProviderEventDetails], None],
         emit_provider_error: typing.Callable[[ProviderEventDetails], None],
+        emit_provider_stale: typing.Callable[[ProviderEventDetails], None],
         emit_provider_configuration_changed: typing.Callable[
             [ProviderEventDetails], None
         ],
