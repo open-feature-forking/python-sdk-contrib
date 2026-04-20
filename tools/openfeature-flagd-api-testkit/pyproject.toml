@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openfeature-flagd-api-testkit"
-version = "0.1.0"
+version = "1.0.0"
 description = "OpenFeature flagd evaluator API compliance test suite"
 readme = "README.md"
 authors = [{ name = "OpenFeature", email = "openfeature-core@groups.io" }]
@@ -16,7 +16,7 @@ classifiers = [
 ]
 keywords = []
 dependencies = [
-    "openfeature-flagd-api",
+    "openfeature-flagd-api>=1.0.0,<2",
     "openfeature-sdk>=0.8.2",
     "pytest>=8.4.0",
     "pytest-bdd>=8.1.0",

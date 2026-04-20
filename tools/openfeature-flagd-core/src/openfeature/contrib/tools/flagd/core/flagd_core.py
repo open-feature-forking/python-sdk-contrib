@@ -44,7 +44,7 @@ def _default_resolve(
     default_value: T,
     metadata: Mapping[str, float | int | str | bool],
     reason: Reason,
-) -> FlagResolutionDetails:
+) -> FlagResolutionDetails[T]:
     variant, value = flag.default
     if variant is None:
         return FlagResolutionDetails(
@@ -69,23 +69,19 @@ class FlagdCore:
 
     def set_flags(self, flag_configuration: str | dict[str, typing.Any]) -> None:
         with self._lock:
-            data: dict[str, typing.Any] = (
-                json.loads(flag_configuration)
-                if isinstance(flag_configuration, str)
-                else flag_configuration
-            )
-            self._flag_store.update(data)
+            self._flag_store.update(self._parse(flag_configuration))
 
     def set_flags_and_get_changed_keys(
         self, flag_configuration: str | dict[str, typing.Any]
     ) -> list[str]:
         with self._lock:
-            data: dict[str, typing.Any] = (
-                json.loads(flag_configuration)
-                if isinstance(flag_configuration, str)
-                else flag_configuration
-            )
-            return self._flag_store.update(data)
+            return self._flag_store.update(self._parse(flag_configuration))
+
+    @staticmethod
+    def _parse(flag_configuration: str | dict[str, typing.Any]) -> dict[str, typing.Any]:
+        if isinstance(flag_configuration, str):
+            return json.loads(flag_configuration)  # type: ignore[no-any-return]
+        return flag_configuration
 
     def get_flag_set_metadata(self) -> Mapping[str, float | int | str | bool]:
         with self._lock:

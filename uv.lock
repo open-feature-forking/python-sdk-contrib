@@ -1509,7 +1509,7 @@ wheels = [
 
 [[package]]
 name = "openfeature-flagd-api"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "tools/openfeature-flagd-api" }
 dependencies = [
     { name = "openfeature-sdk" },
@@ -1536,7 +1536,7 @@ dev = [
 
 [[package]]
 name = "openfeature-flagd-api-testkit"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "tools/openfeature-flagd-api-testkit" }
 dependencies = [
     { name = "openfeature-flagd-api" },
@@ -1569,7 +1569,7 @@ dev = [
 
 [[package]]
 name = "openfeature-flagd-core"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "tools/openfeature-flagd-core" }
 dependencies = [
     { name = "mmh3" },
