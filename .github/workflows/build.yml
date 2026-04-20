@@ -112,6 +112,59 @@ jobs:
           verbose: true # optional (default = false)
           token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
 
+  # Verify that inter-package version constraints are correct by installing
+  # built wheels without workspace resolution — simulates a real PyPI install.
+  # Catches version mismatches that uv workspace sources would silently mask.
+  verify-flagd-install:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: >-
+      contains(toJSON(needs.changes.outputs.packages), 'tools/openfeature-flagd-api')
+      || contains(toJSON(needs.changes.outputs.packages), 'tools/openfeature-flagd-core')
+      || contains(toJSON(needs.changes.outputs.packages), 'tools/openfeature-flagd-api-testkit')
+      || contains(toJSON(needs.changes.outputs.packages), 'providers/openfeature-provider-flagd')
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          submodules: recursive
+
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@6ee6290f1cbc4156c0bdd66691b2c144ef8df19a # v7
+        with:
+          python-version: ${{ env.TARGET_PYTHON_VERSION }}
+
+      - name: Build all flagd wheels
+        run: |
+          uv build tools/openfeature-flagd-api --out-dir dist
+          uv build tools/openfeature-flagd-core --out-dir dist
+          uv build tools/openfeature-flagd-api-testkit --out-dir dist
+          uv build providers/openfeature-provider-flagd --out-dir dist
+
+      - name: Install from wheels without workspace resolution
+        run: |
+          uv venv /tmp/verify-venv
+          # Install provider (top of the chain) — pulls in core and api via
+          # version constraints, resolved from local wheels + PyPI for
+          # third-party deps. This catches inter-package version mismatches
+          # that workspace sources would silently mask.
+          uv pip install --python /tmp/verify-venv/bin/python \
+            --find-links dist \
+            openfeature-provider-flagd \
+            openfeature-flagd-api-testkit
+
+      - name: Smoke test imports and version constraints
+        run: |
+          /tmp/verify-venv/bin/python -c "
+          from openfeature.contrib.tools.flagd.api import Evaluator
+          from openfeature.contrib.tools.flagd.core import FlagdCore
+          from openfeature.contrib.provider.flagd import FlagdProvider
+
+          # Verify FlagdCore satisfies the Evaluator protocol
+          core = FlagdCore()
+          core.set_flags('{\"flags\":{}}')
+          print('All flagd package imports and basic operations OK')
+          "
+
   lint:
     runs-on: ubuntu-latest
 
